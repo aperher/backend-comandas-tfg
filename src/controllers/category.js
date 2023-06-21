@@ -1,20 +1,14 @@
-const { isValidUUIDv4 } = require('../util/validators');
-const { findAll } = require('../models/category');
+const { findAllByEstablishment } = require('../models/category');
 
-const getAll = async (req, res) => {
-    const establishmentId = req.query.establishment;
-
-    if (!isValidUUIDv4(establishmentId)) {
-        return res.status(400).send({ message: 'Establishment not found' });
-    }
-
+const getAllByEstablishment = async (req, res) => {
     try {
-        const categories = await findAll(establishmentId);
+        const establishmentId = req.query.establishment;
+        const categories = await findAllByEstablishment(establishmentId);
         res.send(categories);
     } catch (error) {
         res.status(500).send({ message: error.message });
     }
 };
 
-module.exports = { getAll };
+module.exports = { getAllByEstablishment };
     

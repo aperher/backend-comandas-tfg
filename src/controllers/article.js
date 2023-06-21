@@ -1,15 +1,9 @@
-const { isValidUUIDv4 } = require('../util/validators');
-const { findAll, findDetailsById } = require('../models/article');
+const { findAllByCategory, findDetailsById } = require('../models/article');
 
-const getAll = async (req, res) => {
-    const categoryId = req.query.category;
-
-    if (!isValidUUIDv4(categoryId)) {
-        return res.status(400).send({ message: 'Category not found' });
-    }
-
+const getAllByCategory = async (req, res) => {
     try {
-        const articles = await findAll(categoryId);
+        const category = req.query.category;
+        const articles = await findAllByCategory(category);
         res.send(articles);
     } catch (error) {
         res.status(500).send({ message: error.message });
@@ -18,12 +12,13 @@ const getAll = async (req, res) => {
 
 const getDetailsById = async (req, res) => {
     try {
-        const articles = await findDetailsById(req.params.id);
+        const articleId = req.params.id;
+        const articles = await findDetailsById(articleId);
         res.send(articles);
     } catch (error) {
         res.status(500).send({ message: error.message });
     }
 };
 
-module.exports = { getAll, getDetailsById };
+module.exports = { getAllByCategory, getDetailsById };
     

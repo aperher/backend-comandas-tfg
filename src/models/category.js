@@ -1,6 +1,6 @@
 const sql = require('../util/db');
 
-const findAll = async (establishmentId) => {
+const findAllByEstablishment = async (establishmentId) => {
     try {
         const categories = await sql`
             SELECT id, nombre as name, descripcion as description, "imagenURL" as "imageURL" 
@@ -13,4 +13,4 @@ const findAll = async (establishmentId) => {
     }
 }
 
-module.exports = { findAll };
+module.exports = { findAllByEstablishment };
