@@ -11,7 +11,6 @@ const getAll = async (establishmentId, userIdFilter, dateFilter) => {
                 ${userIdFilter ? sql`and c.usuario_id = ${ userIdFilter }` : sql``} 
                 ${dateFilter ? sql`and c.fecha_hora_inicio::date = ${ dateFilter }` : sql``}
         `;
-        console.log(orders);
         return orders;
         
     } catch (error) {
@@ -145,8 +144,5 @@ async function updateArticleOrderRows({id: orderId, articles}) {
         createArticleOrderRows(sql, orderId, articlesToCreate)
     })
 }
-
-
-// Finalizar comanda, esto es, ponerle fecha_hora_fin y esta_en_servicio = false y además eliminar elemento de ComandaArticulo y ComandaArticuloIngrediente 
 
 module.exports = { getAll, getByOrderId, createOrder, updateOrder, updateArticlesInOrderServedState, updateOrdersFinishService };
