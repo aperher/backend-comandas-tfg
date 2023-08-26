@@ -1,4 +1,7 @@
-const { findAllByEstablishment, findDetailsById } = require('../models/section');
+const { 
+    findAllByEstablishment, 
+    findDetailsById 
+} = require('../models/sections');
 
 const getAllByEstablishment = async (req, res) => {
     try {
@@ -20,4 +23,7 @@ const getDetailsById = async (req, res) => {
     }
 };
 
-module.exports = { getAllByEstablishment, getDetailsById };
+module.exports = { 
+    getAllByEstablishment, 
+    getDetailsById 
+};

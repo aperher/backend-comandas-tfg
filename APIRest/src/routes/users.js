@@ -2,9 +2,8 @@ const express = require('express');
 const router = express.Router();
 const checkOrigin = require('../middlewares/origin');
 const { checkParamId } = require('../middlewares/validation');
-const { getAllByEstablishment, getDetailsById } = require('../controllers/section');
+const { getWaitersByEstablishment } = require('../controllers/users');
 
-router.get('/', getAllByEstablishment);
-router.get('/:id', checkParamId, getDetailsById);
+router.get('/waiters', getWaitersByEstablishment);
 
 module.exports = router;

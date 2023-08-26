@@ -1,4 +1,4 @@
-const { findAllByEstablishment } = require('../models/category');
+const { findAllByEstablishment } = require('../models/categories');
 
 const getAllByEstablishment = async (req, res) => {
     try {

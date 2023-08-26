@@ -1,4 +1,4 @@
-const { findAllByEstablishment, findDetailsById } = require('../models/menu');
+const { findAllByEstablishment, findDetailsById } = require('../models/menus');
 
 const getAllByEstablishment = async (req, res) => {
     try {
