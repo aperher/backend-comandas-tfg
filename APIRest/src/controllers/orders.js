@@ -4,7 +4,7 @@ const {
     createOrder, 
     updateOrder, 
     updateArticlesInOrderServedState, 
-    updateOrdersNotInService 
+    updateOrdersFinishService 
 } = require('../models/orders');
 
 const getAllFiltered = async (req, res) => {
@@ -43,14 +43,12 @@ const create = async (req, res) => {
 };
 
 const update = async (req, res) => {
-    console.log(req.body);
     const body = req.body;
     try {
         await updateOrder(body);
         res.send();
     } catch (error) {
         res.status(500).send({ message: error.message });
-        console.log(error);
     }
 };
 
@@ -66,9 +64,9 @@ const setServedState = async (req, res) => {
 
 const finishService = async (req, res) => {
     try {
-        const orderId = req.params.id;
-        const isFinished = await updateOrdersNotInService(orderId);
-        res.send(isFinished);
+        const ordersId = req.body;
+        await updateOrdersFinishService(ordersId);
+        res.send();
     } catch (error) {
         res.status(500).send({ message: error.message });
     }

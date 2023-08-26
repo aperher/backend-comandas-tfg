@@ -18,14 +18,12 @@ const findDetailsById = async (sectionId) => {
         const section = await sql`
         SELECT s.id, s.nombre, 
             json_agg(
-                json_build_object('id', m.id, 'numero', m.numero, 'comanda_id', c.id, 'fecha_inicio', c.fecha_hora_inicio, 'estado', 
-                CASE
-                    WHEN NOT EXISTS(select 1 from "ComandaArticulo" ca where ca.comanda_id = c.id) THEN null
-                    WHEN EXISTS(select 1 from "ComandaArticulo" ca where ca.comanda_id = c.id and ca.estado = 'preparado') THEN 'preparado'
-                    WHEN NOT EXISTS(select 1 from "ComandaArticulo" ca where ca.comanda_id = c.id and ca.estado <> 'servido') THEN 'servido'
-                    WHEN EXISTS(select 1 from "ComandaArticulo" ca where ca.comanda_id = c.id and ca.estado = 'preparacion') THEN 'preparacion'
-                    ELSE 'pedido'
-                END
+                json_build_object(
+                    'id', m.id, 
+                    'numero', m.numero, 
+                    'comanda_id', c.id, 
+                    'fecha_inicio', c.fecha_hora_inicio, 
+                    'estado', c.estado
                 ) ORDER BY m.numero
             ) AS mesas
         FROM "Seccion" s

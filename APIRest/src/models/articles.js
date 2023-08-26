@@ -70,6 +70,7 @@ const findArticleOrderById = async (articleOrderId) => {
         const [article] = await sql`
             select
                 ca.id,
+                ca.comanda_id as orderId,
                 a.nombre as name,
                 s.nombre as section,
                 m.numero as table,

@@ -1,4 +1,15 @@
-const { findWaitersByEstabishment } = require('../models/users');
+const { findUser, findWaitersByEstabishment } = require('../models/users');
+
+const loginUser = async (req, res) => {
+    try {
+        const email = req.body.email;
+        const password = req.body.password;
+        const user = await findUser(email, password);
+        res.send(user);
+    } catch (error) {
+        res.status(500).send({ message: error.message });
+    }
+};
 
 const getWaitersByEstablishment = async (req, res) => {
     try {
@@ -10,4 +21,4 @@ const getWaitersByEstablishment = async (req, res) => {
     }
 };
 
-module.exports = { getWaitersByEstablishment };
+module.exports = { loginUser, getWaitersByEstablishment };

@@ -1,5 +1,18 @@
 const sql = require('../util/db');
 
+const findUser = async (email, password) => {
+    try {
+        const user = await sql`
+            SELECT id, nombre as name, correo as email, contraseña as password, rol as role
+            FROM "Usuario"
+            WHERE correo = ${email} AND contraseña = ${password}
+        `;
+        return user;
+    } catch (error) {
+        throw new Error('Can not get user');
+    }
+}
+
 const findWaitersByEstabishment = async (establishmentId) => {
     try {
         const waiters = await sql`
@@ -14,4 +27,4 @@ const findWaitersByEstabishment = async (establishmentId) => {
     }
 }
 
-module.exports = { findWaitersByEstabishment };
+module.exports = { findUser, findWaitersByEstabishment };

@@ -12,13 +12,12 @@ const {
     remove 
 } = require('../controllers/orders');
 
-//router.get('/', getAll);
 router.get('/', getAllFiltered);
 router.get('/:orderId', getById);
 router.post('/', /* checkOrigin,*/ create);
 router.put('/', /* checkOrigin,*/ update);
 router.put('/servearticle/:id', checkParamId, setServedState);
-router.put('/finishservice/:id', checkParamId, finishService);
+router.post('/finishservice/', finishService);
 router.delete('/:id', remove);
 
 module.exports = router;

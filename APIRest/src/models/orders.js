@@ -55,18 +55,12 @@ const getByOrderId = async (orderId) => {
 const createOrder = async (body) => {
     try {
         return await sql.begin(async sql => {
-            const orderId = await createOrderRow(sql, body);
-            console.log(orderId);
-            if (body.articles.length > 0) {
-                await createArticleOrderRows(sql, orderId, body);
-            }
-            console.log('articles created');
+            await createOrderRow(sql, body);
 
             return true;
           }
         )
     } catch (error) {
-        console.log(error);
         throw new Error('Can not create the order');
     }
 }
@@ -89,32 +83,36 @@ const updateArticlesInOrderServedState = async (articleOrderId) => {
     }
 }
 
-const updateOrdersNotInService = async (orderId) => {
+const updateOrdersFinishService = async (ordersId) => {
     try {
-        return (await sql`UPDATE "Comanda"
-        SET esta_en_servicio = false and fecha_hora_fin = now()
-        WHERE id = ${orderId} and esta_en_servicio = true and NOT EXISTS(select 1 from "ComandaArticulo" ca where ca.comanda_id = ${orderId} and ca.estado <> 'servido')
-        RETURNING id;`).count > 0;
+        await sql`UPDATE "Comanda"
+            SET esta_en_servicio = false, fecha_hora_fin = now()
+            WHERE id IN ${sql(ordersId)} and esta_en_servicio = true
+            RETURNING id;`;
     } catch (error) {
         throw new Error('Can not update the order not in service');
     }
 }
 
-async function createOrderRow(sql, {id, userId, tableId, initTime}) {
-    console.log('createOrderRow');
+async function createOrderRow(sql, {id, userId, tableId, initTime, articles}) {
+    const [seccionId] = await sql`SELECT seccion_id FROM "Mesa" WHERE id = ${tableId};`;
     const [order] = await sql`
-            INSERT INTO "Comanda" (id, usuario_id, fecha_hora_fin, esta_en_servicio, concepto, mesa_id, fecha_hora_inicio)
-            VALUES (${id ?? sql`DEFAULT`}, '7dd34dbf-6d95-4562-be2f-76ee12a3fbba', NULL, true, NULL, ${tableId}, ${initTime ?? sql`DEFAULT`})
+            INSERT INTO "Comanda" (id, usuario_id, fecha_hora_fin, esta_en_servicio, concepto, mesa_id, fecha_hora_inicio, seccion_id)
+            VALUES (${id ?? sql`DEFAULT`}, '7dd34dbf-6d95-4562-be2f-76ee12a3fbba', NULL, true, NULL, ${tableId}, ${initTime ?? sql`DEFAULT`}, ${seccionId.seccion_id})
             RETURNING id;`
-            console.log(order);
-    return order.id
+    if (articles.length > 0) {
+        await createArticleOrderRows(sql, order.id, articles);
+    }
 }
 
-async function createArticleOrderRows(sql, orderId, {articles}) {
+async function createArticleOrderRows(sql, orderId, articles) {
+    if (articles.length === 0) { return; }
+
+    const [establishmentId] = await sql`SELECT establecimiento_id FROM "Articulo" WHERE id = ${articles[0].articleId};`;
     const articlePromises = articles.map(async (article) => {
         const [orderArticle] = await sql`
-            INSERT INTO "ComandaArticulo" (id, comanda_id, articulo_id, estado) 
-            VALUES (${article.id ?? sql`DEFAULT`}, ${orderId}, ${article.articleId}, ${article.state})
+            INSERT INTO "ComandaArticulo" (id, comanda_id, articulo_id, establecimiento_id, estado) 
+            VALUES (${article.id ?? sql`DEFAULT`}, ${orderId}, ${article.articleId}, ${establishmentId.establecimiento_id}, ${article.state})
             RETURNING id;`
 
         await createIngredientsInArticleOrderRows(sql, article.extras, orderArticle.id);
@@ -131,23 +129,24 @@ async function createIngredientsInArticleOrderRows(sql, ingredients, orderArticl
     await Promise.all(ingredientPromises);
 }
 
-async function updateArticleOrderRows({id, articles}) {
+async function updateArticleOrderRows({id: orderId, articles}) {
     await sql.begin(async sql => {
         if (articles.length === 0) {
-            await sql`DELETE FROM "Comanda" WHERE id = ${id}`; return;
+            await sql`UPDATE SET esta_en_servicio = false FROM "Comanda" WHERE id = ${orderId} and esta_en_servicio = true;`;
+            return;
         }
 
         const articlesIdsToUpdate = articles.filter(article => article.id !== undefined).map(article => article.id)
         const articlesToCreate = articles.filter(article => article.id === undefined)
 
         await sql`DELETE FROM "ComandaArticulo" 
-        WHERE id NOT IN ${sql(articlesIdsToUpdate)} and comanda_id = ${id};`
+        WHERE id NOT IN ${sql(articlesIdsToUpdate)} and comanda_id = ${orderId};`
 
-        createArticleOrderRows(sql, id, {articles: articlesToCreate})
+        createArticleOrderRows(sql, orderId, articlesToCreate)
     })
 }
 
 
 // Finalizar comanda, esto es, ponerle fecha_hora_fin y esta_en_servicio = false y además eliminar elemento de ComandaArticulo y ComandaArticuloIngrediente 
 
-module.exports = { getAll, getByOrderId, createOrder, updateOrder, updateArticlesInOrderServedState, updateOrdersNotInService };
+module.exports = { getAll, getByOrderId, createOrder, updateOrder, updateArticlesInOrderServedState, updateOrdersFinishService };
