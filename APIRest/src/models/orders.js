@@ -108,11 +108,15 @@ async function createArticleOrderRows(sql, orderId, articles) {
     if (articles.length === 0) { return; }
 
     const [establishmentId] = await sql`SELECT establecimiento_id FROM "Articulo" WHERE id = ${articles[0].articleId};`;
+
     const articlePromises = articles.map(async (article) => {
         const [orderArticle] = await sql`
-            INSERT INTO "ComandaArticulo" (id, comanda_id, articulo_id, establecimiento_id, estado) 
-            VALUES (${article.id ?? sql`DEFAULT`}, ${orderId}, ${article.articleId}, ${establishmentId.establecimiento_id}, ${article.state})
-            RETURNING id;`
+        INSERT INTO "ComandaArticulo" (id, comanda_id, articulo_id, establecimiento_id, estado) 
+        VALUES (${article.id ?? sql`DEFAULT`}, ${orderId}, ${article.articleId}, ${establishmentId.establecimiento_id}, ${article.state})
+        RETURNING id;`;
+
+        console.log("despues de la query")
+        console.log(orderArticle)
 
         await createIngredientsInArticleOrderRows(sql, article.extras, orderArticle.id);
     })
@@ -120,6 +124,8 @@ async function createArticleOrderRows(sql, orderId, articles) {
 }
 
 async function createIngredientsInArticleOrderRows(sql, ingredients, orderArticleId) {
+    if (ingredients.length === 0) { return; }
+    
     const ingredientPromises = ingredients.map(async (ingredient) => {
         return sql`
         INSERT INTO "ComandaArticuloIngrediente" (comanda_articulo_id, ingrediente_id)
@@ -129,17 +135,17 @@ async function createIngredientsInArticleOrderRows(sql, ingredients, orderArticl
 }
 
 async function updateArticleOrderRows({id: orderId, articles}) {
-    await sql.begin(async sql => {
+    await sql.begin(async (sql) => {
         if (articles.length === 0) {
             await sql`UPDATE SET esta_en_servicio = false FROM "Comanda" WHERE id = ${orderId} and esta_en_servicio = true;`;
             return;
         }
 
-        const articlesIdsToUpdate = articles.filter(article => article.id !== undefined).map(article => article.id)
+        const articlesIdsToDelete = articles.filter(article => article.id !== undefined).map(article => article.id)
         const articlesToCreate = articles.filter(article => article.id === undefined)
 
         await sql`DELETE FROM "ComandaArticulo" 
-        WHERE id NOT IN ${sql(articlesIdsToUpdate)} and comanda_id = ${orderId};`
+        WHERE id NOT IN ${sql(articlesIdsToDelete)} and comanda_id = ${orderId};`
 
         createArticleOrderRows(sql, orderId, articlesToCreate)
     })
